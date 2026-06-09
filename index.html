@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0810">
+  <title>ASTRA IDLE KNIGHT</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-frame">
+    <!-- ===== 상단 자원 레일 ===== -->
+    <header class="top-bar">
+      <div class="brand-block">
+        <p class="eyebrow">DARK IDLE ACTION RPG</p>
+        <h1>ASTRA<span class="brand-accent">IDLE KNIGHT</span></h1>
+      </div>
+
+      <div class="resource-panel" aria-label="플레이어 정보">
+        <div class="resource-item">
+          <span class="chip-icon" aria-hidden="true">⚑</span>
+          <span class="chip-text">
+            <em>스테이지</em>
+            <strong id="stageText">1</strong>
+          </span>
+        </div>
+        <div class="resource-item">
+          <span class="chip-icon" aria-hidden="true">✦</span>
+          <span class="chip-text">
+            <em>레벨</em>
+            <strong id="levelText">1</strong>
+          </span>
+        </div>
+        <div class="resource-item">
+          <span class="chip-icon gold" aria-hidden="true">◈</span>
+          <span class="chip-text">
+            <em>골드</em>
+            <strong id="goldText">0</strong>
+          </span>
+        </div>
+        <div class="resource-item exp-chip">
+          <span class="chip-icon" aria-hidden="true">✺</span>
+          <span class="chip-text">
+            <em>경험치</em>
+            <strong id="expText">0 / 30</strong>
+            <span class="exp-track"><span id="expBarFill" class="exp-fill"></span></span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== 화면 탭 ===== -->
+    <nav class="screen-tabs" aria-label="화면 이동">
+      <button class="tab-button active" data-screen="home" type="button"><span class="tab-glyph">⌂</span>홈</button>
+      <button class="tab-button" data-screen="battle" type="button"><span class="tab-glyph">⚔</span>전투</button>
+      <button class="tab-button" data-screen="upgrade" type="button"><span class="tab-glyph">⚒</span>강화</button>
+      <button class="tab-button" data-screen="boss" type="button"><span class="tab-glyph">☠</span>보스</button>
+    </nav>
+
+    <!-- ===== 상태 스트립 (HP / 궁극기) ===== -->
+    <section class="status-strip" aria-label="전투 상태">
+      <div class="mini-stat">
+        <span>HP</span>
+        <div class="mini-bar"><div id="heroHpMiniBar" class="mini-bar-fill hp"></div></div>
+        <strong id="heroHpMiniText">100 / 100</strong>
+      </div>
+      <div class="mini-stat">
+        <span>궁극기</span>
+        <div class="mini-bar"><div id="ultimateMiniBar" class="mini-bar-fill ult"></div></div>
+        <strong id="ultimateMiniText">0%</strong>
+      </div>
+      <p id="saveText" class="save-text">자동 저장 대기</p>
+    </section>
+
+    <!-- ===== 화면 영역 ===== -->
+    <section class="screen-area">
+
+      <!-- 홈 -->
+      <section id="homeScreen" class="screen active" data-screen-panel="home">
+        <div class="home-layout">
+          <article class="hero-banner">
+            <div class="portrait-frame knight-card">
+              <img class="portrait-img" src="assets/character/astria.png" alt=""
+                   onerror="this.classList.add('img-missing')">
+              <div class="frame-emblem" aria-hidden="true">✠</div>
+              <div class="unit-sigil">A</div>
+              <div class="unit-shadow"></div>
+            </div>
+            <div class="home-copy">
+              <p class="screen-label">홈</p>
+              <h2>아스트리아 기사단 대기소</h2>
+              <p id="homeSummary">자동 전투가 준비되었습니다.</p>
+              <div class="home-mini-grid">
+                <div class="mini-fact"><em>스킬 단계</em><strong id="homeSkillLevelText">1</strong></div>
+                <div class="mini-fact"><em>공격 강화</em><strong id="homeAttackUpgradeText">0</strong></div>
+                <div class="mini-fact"><em>체력 강화</em><strong id="homeHpUpgradeText">0</strong></div>
+              </div>
+            </div>
+          </article>
+
+          <div class="home-actions">
+            <button id="homeBattleButton" class="primary-button" type="button">전투 시작</button>
+            <button id="homeUpgradeButton" class="secondary-button" type="button">강화</button>
+            <button id="homeBossButton" class="danger-button" type="button">보스 도전</button>
+            <button id="resetSaveButton" class="ghost-button" type="button">저장 초기화</button>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat-card"><span>공격력</span><strong id="homeAttackText">10</strong></div>
+            <div class="stat-card"><span>최대 체력</span><strong id="homeMaxHpText">100</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 전투 -->
+      <section id="battleScreen" class="screen" data-screen-panel="battle">
+        <div class="battle-layout">
+          <article class="unit-panel player">
+            <p class="screen-label">플레이어</p>
+            <div id="heroBox" class="portrait-frame unit-box knight">
+              <img class="portrait-img" src="assets/character/astria.png" alt=""
+                   onerror="this.classList.add('img-missing')">
+              <div class="frame-emblem" aria-hidden="true">✠</div>
+              <div class="unit-sigil">A</div>
+            </div>
+            <h2>아스트리아</h2>
+            <p id="battleHeroStats">공격력 10</p>
+            <div class="bar-label"><span>체력</span><strong id="battleHeroHpText">100 / 100</strong></div>
+            <div class="large-bar"><div id="battleHeroHpBar" class="large-bar-fill hp"></div></div>
+          </article>
+
+          <div class="battle-center">
+            <p id="battleModeText" class="battle-mode">자동 전투</p>
+            <div class="crossed-blades">⚔</div>
+            <button id="skillButton" class="primary-button skill" type="button">스킬</button>
+            <button id="ultimateButton" class="danger-button skill" type="button">궁극기</button>
+          </div>
+
+          <article class="unit-panel enemy">
+            <p class="screen-label">몬스터</p>
+            <div id="monsterBox" class="portrait-frame unit-box monster">
+              <img class="portrait-img" src="assets/enemies/slime.png" alt=""
+                   onerror="this.classList.add('img-missing')">
+              <div class="frame-emblem" aria-hidden="true">✦</div>
+              <div class="unit-sigil">M</div>
+              <div class="fx-slash" aria-hidden="true"></div>
+            </div>
+            <h2 id="monsterNameText">그림자 늑대</h2>
+            <p id="monsterStatsText">공격력 5</p>
+            <div class="bar-label"><span>체력</span><strong id="monsterHpText">45 / 45</strong></div>
+            <div class="large-bar"><div id="monsterHpBar" class="large-bar-fill enemy"></div></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- 강화 -->
+      <section id="upgradeScreen" class="screen" data-screen-panel="upgrade">
+        <div class="upgrade-layout">
+          <article class="upgrade-panel">
+            <p class="screen-label">공격력 강화</p>
+            <h2>검의 각성</h2>
+            <p id="attackUpgradeInfo">공격력 +5</p>
+            <div class="upgrade-number"><span>현재 공격력</span><strong id="upgradeAttackText">10</strong></div>
+            <button id="attackUpgradeButton" class="primary-button" type="button">강화</button>
+            <p id="attackCostText" class="cost-text">필요 골드 50</p>
+          </article>
+
+          <article class="upgrade-panel">
+            <p class="screen-label">체력 강화</p>
+            <h2>갑주의 맹세</h2>
+            <p id="hpUpgradeInfo">최대 체력 +30</p>
+            <div class="upgrade-number"><span>현재 최대 체력</span><strong id="upgradeHpText">100</strong></div>
+            <button id="hpUpgradeButton" class="primary-button" type="button">강화</button>
+            <p id="hpCostText" class="cost-text">필요 골드 45</p>
+          </article>
+
+          <article class="upgrade-panel">
+            <p class="screen-label">스킬 강화</p>
+            <h2>달빛 서약</h2>
+            <p id="skillUpgradeInfo">스킬 배율 +0.5</p>
+            <div class="upgrade-number"><span>현재 스킬 단계</span><strong id="upgradeSkillText">1</strong></div>
+            <button id="skillUpgradeButton" class="primary-button" type="button">강화</button>
+            <p id="skillCostText" class="cost-text">필요 골드 60</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- 보스 -->
+      <section id="bossScreen" class="screen" data-screen-panel="boss">
+        <div class="boss-layout">
+          <article class="boss-arena">
+            <div class="boss-top">
+              <p class="screen-label">보스 도전</p>
+              <div id="bossTimerWrap" class="boss-timer" aria-label="남은 시간">
+                <span class="timer-label">남은 시간</span>
+                <strong id="bossTimerText">30s</strong>
+                <span class="timer-track"><span id="bossTimerBar" class="timer-fill"></span></span>
+              </div>
+            </div>
+            <div id="bossBox" class="portrait-frame unit-box boss">
+              <img class="portrait-img" src="assets/enemies/boss.png" alt=""
+                   onerror="this.classList.add('img-missing')">
+              <div class="frame-emblem" aria-hidden="true">☠</div>
+              <div class="unit-sigil">B</div>
+              <div class="fx-slash" aria-hidden="true"></div>
+            </div>
+            <h2 id="bossNameText">심연의 문지기</h2>
+            <p id="bossStatusText">보스 도전이 대기 중입니다.</p>
+            <div class="bar-label"><span>보스 체력</span><strong id="bossHpText">0 / 0</strong></div>
+            <div class="large-bar"><div id="bossHpBar" class="large-bar-fill boss-fill"></div></div>
+          </article>
+
+          <aside class="boss-actions">
+            <button id="startBossButton" class="danger-button" type="button">보스 도전 시작</button>
+            <button id="bossSkillButton" class="primary-button" type="button">스킬</button>
+            <button id="bossUltimateButton" class="danger-button" type="button">궁극기</button>
+            <button id="bossBattleButton" class="secondary-button" type="button">일반 전투</button>
+          </aside>
+        </div>
+      </section>
+    </section>
+
+    <!-- ===== 로그 ===== -->
+    <footer class="log-panel" aria-label="전투 로그">
+      <h2>로그</h2>
+      <ul id="logList"></ul>
+    </footer>
+
+    <!-- ===== 궁극기 전체 화면 이펙트 ===== -->
+    <div id="ultFx" class="ult-fx" aria-hidden="true"></div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
