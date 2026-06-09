@@ -1,288 +1,375 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Canvas 2D vs WebGL 비교 데모</title>
-  <style>
-    *{box-sizing:border-box}
-    html,body{margin:0;width:100%;height:100%;background:#070914;color:#f7e7bd;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden}
-    body{background:radial-gradient(circle at 20% 10%,rgba(111,79,255,.22),transparent 32%),radial-gradient(circle at 80% 15%,rgba(255,207,108,.16),transparent 28%),linear-gradient(180deg,#091026,#04050b)}
-    .app{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;padding:10px}
-    .frame{position:relative;width:min(1280px,100vw);aspect-ratio:16/9;max-height:100vh;border:1px solid rgba(244,200,119,.42);border-radius:22px;overflow:hidden;background:#0c1020;box-shadow:0 24px 90px rgba(0,0,0,.58)}
-    canvas{display:block;width:100%;height:100%}
-    .top{position:absolute;left:14px;right:14px;top:12px;z-index:5;display:flex;justify-content:space-between;gap:10px;pointer-events:none}
-    .brand,.stats,.panel{background:rgba(5,8,18,.72);border:1px solid rgba(244,200,119,.28);backdrop-filter:blur(8px);border-radius:16px}
-    .brand{padding:10px 14px;min-width:220px}
-    .brand h1{margin:0;font-size:23px;letter-spacing:.04em}
-    .brand p{margin:2px 0 0;color:#cbc2d6;font-size:13px}
-    .stats{display:flex;gap:6px;align-items:center;padding:8px}
-    .stat{min-width:88px;padding:6px 8px;border-radius:12px;background:rgba(255,255,255,.045);color:#d8d1e5;font-size:12px}
-    .stat b{display:block;color:#ffd98a;font-size:17px}
-    .tabs{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:8;display:flex;gap:8px;background:rgba(0,0,0,.38);padding:6px;border-radius:999px;border:1px solid rgba(244,200,119,.2)}
-    .tabs button{border:0;border-radius:999px;padding:10px 18px;font-weight:900;font-size:14px;color:#f7e7bd;background:transparent}
-    .tabs button.active{background:linear-gradient(180deg,#ffe7a3,#c7903b);color:#201321}
-    .bottom{position:absolute;left:14px;right:14px;bottom:12px;z-index:6;display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
-    .panel{width:min(510px,48%);min-height:92px;padding:12px 14px;color:#e8e0f0;font-size:14px;line-height:1.55}
-    .panel strong{color:#ffd98a}
-    .controls{display:flex;gap:9px}
-    .controls button{border:0;border-radius:16px;min-width:112px;padding:14px 18px;font-size:16px;font-weight:900;color:#1b1325;background:linear-gradient(180deg,#ffe8a8,#c88b2f);box-shadow:0 8px 22px rgba(0,0,0,.35)}
-    .controls button.secondary{color:#f7e7bd;background:linear-gradient(180deg,#5b49ba,#2c235f);border:1px solid rgba(244,200,119,.25)}
-    .controls button:active{transform:translateY(2px)}
-    .notice{position:absolute;left:50%;bottom:122px;transform:translateX(-50%);z-index:7;min-width:260px;text-align:center;padding:9px 13px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);color:#fff0c8;font-weight:800}
-    .hidden{display:none}
-    @media(max-width:760px){
-      .app{padding:0}
-      .frame{width:100vw;height:100vh;aspect-ratio:auto;border-radius:0;border-left:0;border-right:0}
-      .brand{min-width:138px;padding:7px 9px}
-      .brand h1{font-size:15px}
-      .brand p{font-size:10px}
-      .tabs{top:9px;padding:4px}
-      .tabs button{padding:8px 10px;font-size:12px}
-      .stats{padding:5px;gap:4px}
-      .stat{min-width:62px;font-size:10px;padding:5px 6px}
-      .stat b{font-size:13px}
-      .bottom{left:8px;right:8px;bottom:8px;gap:8px}
-      .panel{width:43%;min-height:62px;font-size:10px;padding:8px}
-      .controls{gap:6px}
-      .controls button{min-width:78px;font-size:12px;padding:11px 8px}
-      .notice{bottom:88px;font-size:11px;padding:7px 10px}
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>ASTRA LUMEN - WebGL RPG Prototype</title>
+<style>
+:root{
+  --gold:#f3c56a;
+  --gold2:#ffecad;
+  --navy:#111a34;
+  --deep:#060811;
+  --panel:rgba(8,12,25,.78);
+  --line:rgba(243,197,106,.36);
+  --blue:#6fa9ff;
+  --violet:#9a68ff;
+  --danger:#ff5b5b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#03050c;color:#f9e7bd;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:manipulation}
+button{font-family:inherit;border:0;-webkit-tap-highlight-color:transparent}
+#app{width:100vw;height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 50% 0%,rgba(93,124,255,.28),transparent 35%),linear-gradient(180deg,#070b18,#03050c)}
+.frame{position:relative;width:min(1280px,100vw);aspect-ratio:16/9;max-height:100vh;overflow:hidden;background:#090d18;border:1px solid var(--line);border-radius:22px;box-shadow:0 24px 90px rgba(0,0,0,.68);isolation:isolate}
+#stage{position:absolute;inset:0;z-index:0}
+#stage canvas{width:100%!important;height:100%!important;display:block}
+.bgGlow{position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(circle at 27% 42%,rgba(255,215,131,.12),transparent 27%),radial-gradient(circle at 77% 28%,rgba(77,112,255,.13),transparent 32%),linear-gradient(90deg,rgba(0,0,0,.12),transparent 35%,rgba(0,0,0,.33))}
+.top{position:absolute;left:14px;right:14px;top:12px;z-index:10;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none}
+.profile{pointer-events:auto;display:flex;align-items:center;gap:11px;min-width:300px;padding:9px 12px;border-radius:18px;background:linear-gradient(180deg,rgba(12,16,34,.84),rgba(5,7,16,.74));border:1px solid var(--line);backdrop-filter:blur(10px)}
+.portrait{width:58px;height:58px;border-radius:50%;border:2px solid var(--gold);background:radial-gradient(circle at 35% 28%,#fff0d2,#c99f70 38%,#2e3566 39%,#12172d);box-shadow:0 0 22px rgba(255,211,127,.26);position:relative;overflow:hidden}
+.portrait:before{content:"";position:absolute;left:15px;top:11px;width:30px;height:32px;border-radius:50%;background:#ffe1d2}
+.portrait:after{content:"";position:absolute;left:4px;top:6px;width:48px;height:54px;border-radius:50%;border-top:13px solid #f7e5c3;border-left:7px solid #f7e5c3;transform:rotate(-13deg)}
+.profile h1{margin:0;font-size:16px;line-height:1.1;color:#fff2c9}
+.profile small{display:block;margin-top:4px;color:#cfc6d8}
+.expbar{width:210px;height:7px;margin-top:7px;border-radius:999px;background:rgba(255,255,255,.13);overflow:hidden}
+.expbar span{display:block;height:100%;width:45%;background:linear-gradient(90deg,#69a6ff,#ffd67b)}
+.resources{pointer-events:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.res{height:43px;min-width:128px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;border-radius:999px;background:linear-gradient(180deg,rgba(16,22,43,.86),rgba(7,9,18,.78));border:1px solid var(--line);box-shadow:inset 0 0 0 1px rgba(255,255,255,.03)}
+.icon{width:26px;height:26px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(180deg,#ffe8a4,#b8772f);color:#1f1421;font-weight:900}
+.res.blue .icon{background:linear-gradient(180deg,#bfe0ff,#3479ff)}
+.res.pink .icon{background:linear-gradient(180deg,#ffc8ff,#b45eff)}
+.res span{font-weight:900;color:#fff2d0}
+.rightMini{position:absolute;right:18px;top:72px;z-index:11;display:flex;gap:8px}
+.miniBtn{width:50px;height:50px;border-radius:16px;background:rgba(8,12,25,.70);border:1px solid var(--line);color:#fff2c9;font-size:25px;font-weight:900;backdrop-filter:blur(8px)}
+.leftEvents{position:absolute;left:18px;top:102px;z-index:8;width:100px;display:flex;flex-direction:column;gap:9px}
+.eventCard{min-height:90px;padding:10px 8px;border-radius:15px;background:linear-gradient(180deg,rgba(14,24,48,.78),rgba(7,9,17,.76));border:1px solid var(--line);color:#fff2d0;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.22)}
+.eventIcon{font-size:29px;filter:drop-shadow(0 0 9px rgba(255,212,122,.4))}
+.eventCard b{display:block;font-size:13px;margin-top:5px}
+.eventCard small{font-size:10px;color:#d9ccba}
+.heroName{position:absolute;left:128px;bottom:130px;z-index:7;text-shadow:0 4px 18px rgba(0,0,0,.8)}
+.heroName .logo{font-family:Georgia,serif;font-size:48px;font-style:italic;color:#ffe1a0;letter-spacing:.08em}
+.heroName b{display:block;font-size:26px;color:#fff5d6;margin-top:-8px}
+.heroName p{margin:8px 0 0;color:#e5ddec;line-height:1.45;font-weight:600}
+.homeRight{position:absolute;right:18px;top:118px;z-index:8;width:390px;display:grid;gap:10px}
+.banner{height:112px;border-radius:18px;border:1px solid var(--line);overflow:hidden;background:linear-gradient(110deg,rgba(12,19,42,.94),rgba(27,64,141,.84),rgba(12,19,42,.85));box-shadow:0 10px 30px rgba(0,0,0,.28);position:relative;padding:20px}
+.banner:after{content:"";position:absolute;right:-30px;top:-40px;width:210px;height:210px;border-radius:50%;background:radial-gradient(circle,#fff7d6,rgba(255,255,255,.08) 38%,transparent 63%);opacity:.45}
+.banner h2{margin:0;color:#fff0b8;font-size:26px}
+.banner p{margin:8px 0 0;color:#ffe19d;font-weight:900}
+.menuGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.menuBtn{height:92px;border-radius:15px;background:linear-gradient(180deg,rgba(16,25,48,.86),rgba(8,11,21,.78));border:1px solid var(--line);color:#fff4d2;font-size:16px;font-weight:950;position:relative}
+.menuBtn .big{display:block;font-size:30px;margin-bottom:5px}
+.redDot{position:absolute;right:10px;top:9px;width:10px;height:10px;border-radius:50%;background:#ff3636;box-shadow:0 0 0 2px rgba(255,255,255,.75)}
+.mission{border-radius:16px;background:rgba(6,9,18,.78);border:1px solid var(--line);padding:14px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.mission b{color:#ffe1a0}
+.mission p{margin:5px 0 0;color:#d9d1e4;font-size:13px}
+.goldBtn{height:48px;padding:0 23px;border-radius:14px;background:linear-gradient(180deg,#fff0b7,#ca8d30);font-weight:950;color:#211322;font-size:17px}
+.bigStart{height:86px;border-radius:19px;border:1px solid rgba(255,233,166,.66);background:linear-gradient(180deg,#fff0b8,#d99c35 58%,#9c5e16);box-shadow:0 0 32px rgba(255,199,85,.34),inset 0 0 0 1px rgba(255,255,255,.23);color:#2a1622;font-size:34px;font-weight:950;font-family:Georgia,serif}
+.bottomNav{position:absolute;left:0;right:0;bottom:0;height:96px;z-index:14;display:grid;grid-template-columns:repeat(6,1fr);background:linear-gradient(180deg,rgba(14,20,39,.73),rgba(5,7,13,.92));border-top:1px solid var(--line);backdrop-filter:blur(10px)}
+.navBtn{background:transparent;color:#e8ddc6;border-right:1px solid rgba(243,197,106,.13);font-size:17px;font-weight:950;position:relative}
+.navBtn span{display:block;font-size:28px;margin-bottom:3px}
+.navBtn.active{color:#fff0bb;background:radial-gradient(circle at center,rgba(255,210,111,.22),transparent 62%)}
+.navBtn.active:before{content:"";position:absolute;left:18%;right:18%;top:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold2),transparent)}
+.screen{position:absolute;inset:0;z-index:6;display:none}
+.screen.show{display:block}
+.battleHud{position:absolute;inset:0;z-index:9;display:none;pointer-events:none}
+.battleHud.show{display:block}
+.bossBar{position:absolute;left:320px;right:270px;top:70px;height:76px;border-radius:15px;background:rgba(7,9,18,.72);border:1px solid var(--line);padding:9px 14px;backdrop-filter:blur(8px)}
+.bossBar h3{margin:0;color:#ff9c77;font-size:18px}
+.hpBossBg{height:14px;margin-top:6px;border-radius:999px;background:rgba(0,0,0,.55);overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+.hpBossFill{height:100%;width:100%;background:linear-gradient(90deg,#ff5757,#ffd271);transition:width .2s}
+.timer{text-align:center;margin-top:5px;color:#ffe9b5;font-weight:950}
+.combo{position:absolute;left:44px;top:190px;color:#ffe1a0;text-shadow:0 4px 20px rgba(0,0,0,.9)}
+.combo b{font-size:46px;font-family:Georgia,serif}
+.combo small{display:block;color:#ffe9b5;font-weight:800}
+.missionBox{position:absolute;right:22px;top:150px;width:260px;padding:17px;border-radius:16px;background:rgba(6,9,18,.76);border:1px solid var(--line);backdrop-filter:blur(8px)}
+.missionBox h3{margin:0 0 10px;color:#ffe1a0}
+.missionBox p{margin:9px 0;color:#ded6e5;font-size:13px}
+.skillBar{position:absolute;left:280px;right:280px;bottom:110px;display:flex;justify-content:center;gap:14px;pointer-events:auto}
+.skill{width:86px;height:86px;border-radius:50%;border:2px solid rgba(255,226,160,.55);background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.24),transparent 30%),linear-gradient(180deg,#17244c,#0a0d1d);box-shadow:0 0 28px rgba(86,139,255,.22);color:#fff0c8;font-size:12px;font-weight:900}
+.skill b{display:block;font-size:31px;margin-bottom:3px}
+.ultimate{width:116px;height:116px;margin-top:-25px;background:radial-gradient(circle,#fff3b8,#d59b35 48%,#2a1840 50%,#0a0d1d);color:#2c1825}
+.ultRing{position:absolute;right:94px;bottom:126px;width:128px;height:128px;border-radius:50%;display:grid;place-items:center;color:#fff0c8;font-weight:950;background:conic-gradient(#ffd66f calc(var(--ult)*1%),rgba(255,255,255,.12) 0);border:2px solid var(--line)}
+.panelScreen{position:absolute;left:90px;right:20px;top:90px;bottom:105px;z-index:15;display:none;gap:14px;background:linear-gradient(180deg,rgba(8,12,25,.84),rgba(4,6,12,.82));border:1px solid var(--line);border-radius:20px;padding:18px;backdrop-filter:blur(12px)}
+.panelScreen.show{display:grid}
+.growth{grid-template-columns:1.1fr 1fr}
+.cardPanel{border:1px solid rgba(243,197,106,.24);border-radius:18px;background:rgba(255,255,255,.035);padding:15px}
+.cardPanel h2{margin:0 0 10px;color:#ffe1a0}
+.characterView{display:grid;grid-template-columns:1fr 170px;gap:12px;height:100%}
+.heroPaper{position:relative;border-radius:18px;border:1px solid var(--line);background:radial-gradient(circle at 52% 28%,rgba(255,234,180,.15),transparent 24%),linear-gradient(180deg,rgba(23,31,55,.55),rgba(9,11,22,.75));overflow:hidden}
+.heroPaper:before{content:"";position:absolute;left:50%;bottom:20px;transform:translateX(-50%);width:210px;height:450px;background:linear-gradient(180deg,#fff4d7,#e7c991 28%,#17254e 29%,#121a35 43%,#fff2d9 44%);clip-path:polygon(50% 0,70% 16%,66% 39%,82% 67%,62% 100%,50% 87%,38% 100%,18% 67%,34% 39%,30% 16%);filter:drop-shadow(0 18px 22px rgba(0,0,0,.45))}
+.heroPaper:after{content:"";position:absolute;left:50%;top:64px;transform:translateX(-50%);width:105px;height:125px;border-radius:50%;background:radial-gradient(circle at 50% 34%,#ffe2d2 0 31%,#f7e6c7 32% 60%,transparent 61%);box-shadow:0 0 30px rgba(255,225,160,.18)}
+.equipGrid{display:grid;gap:8px}
+.equip{border:1px solid var(--line);border-radius:13px;background:linear-gradient(180deg,rgba(15,24,48,.8),rgba(6,8,15,.78));padding:10px;text-align:center;color:#fff0c9;font-weight:900}
+.equip small{display:block;color:#e3d9e8;font-weight:600}
+.statList{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.statLine{padding:11px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+.statLine b{color:#ffe1a0}
+.upgradeButtons{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.upgradeButtons button{height:52px;border-radius:14px;background:linear-gradient(180deg,#fff0b7,#ca8d30);font-weight:950;color:#211322}
+.summon{grid-template-columns:300px 1fr 330px}
+.bannerList{display:grid;gap:10px}
+.bannerList .pick{border:1px solid var(--line);border-radius:16px;min-height:110px;padding:15px;background:linear-gradient(120deg,rgba(29,42,88,.85),rgba(9,12,25,.80));color:#fff0c8}
+.ssrCard{position:relative;border-radius:22px;border:2px solid rgba(255,223,139,.72);background:radial-gradient(circle at 50% 38%,rgba(255,241,188,.36),transparent 34%),linear-gradient(180deg,rgba(35,46,92,.92),rgba(8,11,25,.90));display:grid;place-items:center;text-align:center;overflow:hidden}
+.ssrCard:before{content:"";position:absolute;inset:30px;border:1px solid rgba(255,233,169,.43);border-radius:18px}
+.ssrCard h2{font-size:52px;margin:0;color:#ffe9a8;text-shadow:0 0 24px rgba(255,207,95,.7)}
+.ssrCard b{font-size:34px;color:#fff3d0}
+.summonRight{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.heroSmall{border-radius:13px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,236,180,.15),rgba(9,12,25,.88));display:grid;place-items:center;color:#ffe1a0;font-weight:950}
+.summonButtons{position:absolute;left:410px;right:350px;bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.summonButtons button{height:58px;border-radius:18px;background:linear-gradient(180deg,#fff0b7,#ca8d30);font-weight:950;font-size:21px;color:#211322}
+.toast{position:absolute;left:50%;bottom:118px;transform:translateX(-50%);z-index:50;padding:11px 16px;border-radius:999px;background:rgba(0,0,0,.62);border:1px solid rgba(255,255,255,.13);color:#fff0c9;font-weight:950;opacity:0;transition:.2s;pointer-events:none;text-align:center}
+.toast.show{opacity:1;bottom:134px}
+.loading{position:absolute;inset:0;z-index:100;display:grid;place-items:center;background:#070a15;color:#ffe1a0;font-weight:950;text-align:center}
+.loading.hide{display:none}
+@media(max-width:760px){
+  #app{place-items:start center}
+  .frame{width:100vw;height:100vh;aspect-ratio:auto;border-radius:0;border-left:0;border-right:0}
+  .top{left:6px;right:6px;top:6px;gap:5px}
+  .profile{min-width:146px;padding:6px;gap:6px;border-radius:12px}
+  .portrait{width:39px;height:39px}
+  .profile h1{font-size:11px}.profile small{font-size:9px}.expbar{width:90px;height:5px;margin-top:3px}
+  .resources{gap:4px}.res{min-width:60px;height:32px;padding:0 5px;font-size:10px}.icon{width:19px;height:19px;font-size:11px}
+  .rightMini{right:6px;top:43px;gap:4px}.miniBtn{width:33px;height:33px;font-size:17px;border-radius:10px}
+  .leftEvents{left:6px;top:75px;width:60px;gap:5px}.eventCard{min-height:60px;padding:5px}.eventIcon{font-size:17px}.eventCard b{font-size:9px}.eventCard small{display:none}
+  .heroName{left:74px;bottom:78px}.heroName .logo{font-size:25px}.heroName b{font-size:15px}.heroName p{font-size:10px}
+  .homeRight{right:6px;top:78px;width:238px;gap:5px}.banner{height:66px;padding:10px;border-radius:12px}.banner h2{font-size:15px}.banner p{font-size:10px}
+  .menuGrid{gap:4px}.menuBtn{height:51px;font-size:10px;border-radius:10px}.menuBtn .big{font-size:18px}
+  .mission{padding:8px;border-radius:10px}.mission p{display:none}.goldBtn{height:35px;padding:0 12px;font-size:11px}.bigStart{height:50px;font-size:19px;border-radius:12px}
+  .bottomNav{height:58px}.navBtn{font-size:10px}.navBtn span{font-size:18px}
+  .battleHud .bossBar{left:120px;right:72px;top:45px;height:52px;padding:6px}.bossBar h3{font-size:11px}.hpBossBg{height:9px}.timer{font-size:11px}
+  .combo{left:16px;top:132px}.combo b{font-size:24px}.combo small{font-size:10px}
+  .missionBox{right:6px;top:101px;width:132px;padding:8px;border-radius:10px}.missionBox h3{font-size:11px}.missionBox p{font-size:9px;margin:5px 0}
+  .skillBar{left:98px;right:84px;bottom:62px;gap:6px}.skill{width:48px;height:48px;font-size:8px}.skill b{font-size:18px}.ultimate{width:64px;height:64px;margin-top:-13px}
+  .ultRing{right:14px;bottom:70px;width:70px;height:70px;font-size:10px}
+  .panelScreen{left:6px;right:6px;top:53px;bottom:62px;padding:8px;border-radius:14px;gap:7px}
+  .growth{grid-template-columns:1fr 1fr}.cardPanel{padding:8px;border-radius:12px}.cardPanel h2{font-size:14px;margin-bottom:6px}
+  .characterView{grid-template-columns:1fr 82px}.equipGrid{gap:4px}.equip{padding:5px;font-size:9px}.equip small{font-size:8px}
+  .statList{gap:5px}.statLine{padding:6px;font-size:9px}.upgradeButtons{gap:5px}.upgradeButtons button{height:33px;font-size:10px}
+  .summon{grid-template-columns:118px 1fr 118px}.bannerList{gap:5px}.bannerList .pick{min-height:60px;padding:7px;font-size:10px}.ssrCard h2{font-size:28px}.ssrCard b{font-size:17px}.summonRight{gap:4px}.heroSmall{font-size:9px}.summonButtons{left:145px;right:126px;bottom:68px;gap:6px}.summonButtons button{height:36px;font-size:12px}
+}
+</style>
 </head>
 <body>
-  <main class="app">
-    <section class="frame">
-      <canvas id="canvas2d" width="1280" height="720"></canvas>
-      <canvas id="webgl" class="hidden" width="1280" height="720"></canvas>
+<div id="app">
+  <div class="frame">
+    <div id="stage"></div>
+    <div class="bgGlow"></div>
+    <div id="loading" class="loading">ASTRA LUMEN WebGL 로딩 중...</div>
 
-      <div class="tabs">
-        <button id="tabCanvas" class="active">Canvas 2D</button>
-        <button id="tabWebgl">WebGL</button>
-      </div>
-
-      <div class="top">
-        <div class="brand">
-          <h1 id="title">Canvas 2D</h1>
-          <p id="subtitle">그림판처럼 2D를 직접 그리는 방식</p>
-        </div>
-        <div class="stats">
-          <div class="stat">방식 <b id="mode">2D</b></div>
-          <div class="stat">난이도 <b id="difficulty">쉬움</b></div>
-          <div class="stat">추천 <b id="target">입문</b></div>
+    <div class="top">
+      <div class="profile">
+        <div class="portrait"></div>
+        <div>
+          <h1>Lv. <span id="lv">78</span> 빛나는별</h1>
+          <small>전투력 <span id="power">1,234,567</span></small>
+          <div class="expbar"><span id="expbar"></span></div>
         </div>
       </div>
+      <div class="resources">
+        <div class="res"><div class="icon">G</div><span id="gold">12,345,678</span> +</div>
+        <div class="res blue"><div class="icon">◆</div><span id="dia">8,765</span> +</div>
+        <div class="res pink"><div class="icon">◇</div><span id="gem">1,250</span> +</div>
+        <div class="res"><div class="icon">✦</div><span>120/120</span> +</div>
+      </div>
+    </div>
 
-      <div id="notice" class="notice">자동 전투 중 — 버튼을 눌러 비교해봐</div>
+    <div class="rightMini">
+      <button class="miniBtn">✉</button><button class="miniBtn">💬</button><button class="miniBtn">⚙</button>
+    </div>
 
-      <div class="bottom">
-        <div id="log" class="panel">
-          <strong>Canvas 2D</strong>는 ctx 명령으로 배경, 캐릭터, 몬스터, 체력바, 데미지 숫자를 직접 그립니다.
+    <div id="homeLayer" class="screen show">
+      <div class="leftEvents">
+        <div class="eventCard"><div class="eventIcon">✦</div><b>시즌 패스</b><small>21일 10시간</small></div>
+        <div class="eventCard"><div class="eventIcon">🎁</div><b>첫 충전</b><small>한정 패키지</small></div>
+        <div class="eventCard"><div class="eventIcon">🏆</div><b>7일 출석</b><small>이벤트</small></div>
+      </div>
+
+      <div class="heroName">
+        <div class="logo">ASTRIA</div>
+        <b>아스트리아</b>
+        <p>빛은 반드시 어둠을 밝힙니다.<br>그것이 우리의 사명입니다.</p>
+      </div>
+
+      <div class="homeRight">
+        <div class="banner">
+          <h2>성광의 부름</h2>
+          <p>한정 소환 확률 UP!</p>
         </div>
-        <div class="controls">
-          <button id="skillBtn">스킬</button>
-          <button id="ultBtn" class="secondary">궁극기</button>
+        <div class="menuGrid">
+          <button class="menuBtn"><span class="redDot"></span><span class="big">⚖</span>상점</button>
+          <button class="menuBtn"><span class="redDot"></span><span class="big">🎁</span>이벤트</button>
+          <button class="menuBtn"><span class="big">🛡</span>길드</button>
+          <button class="menuBtn"><span class="big">📜</span>임무</button>
+          <button class="menuBtn"><span class="big">🏆</span>업적</button>
+          <button class="menuBtn"><span class="big">👥</span>친구</button>
+        </div>
+        <div class="mission">
+          <div><b>메인 임무</b><p>16-7. 성채의 결전 — 성채 최상층으로 진격하세요.</p></div>
+          <button class="goldBtn" onclick="goBattle()">바로가기</button>
+        </div>
+        <button class="bigStart" onclick="goBattle()">전투 시작</button>
+      </div>
+    </div>
+
+    <div id="battleHud" class="battleHud">
+      <div class="bossBar">
+        <h3>Lv. 85 타락한 천공의 군주 베르가스</h3>
+        <div class="hpBossBg"><div id="bossHp" class="hpBossFill"></div></div>
+        <div class="timer">남은 시간 <span id="timer">02:48</span></div>
+      </div>
+      <div class="combo"><b id="combo">0 COMBO</b><small>치명타 확률 +3%</small></div>
+      <div class="missionBox">
+        <h3>미션 목표</h3>
+        <p>◇ 보스 몬스터 처치</p>
+        <p>◇ 180초 내 클리어</p>
+        <p>◇ 아군 사망 없이 클리어</p>
+      </div>
+      <div class="skillBar">
+        <button class="skill" onclick="useSkill(1)"><b>⚔</b>기본 공격</button>
+        <button class="skill" onclick="useSkill(2)"><b>✦</b>성광 베기</button>
+        <button class="skill" onclick="useSkill(3)"><b>☄</b>천공 돌진</button>
+        <button class="skill" onclick="useSkill(4)"><b>✺</b>성역 폭발</button>
+        <button class="skill ultimate" onclick="useUltimate()"><b>✹</b>궁극기</button>
+      </div>
+      <div id="ultRing" class="ultRing" style="--ult:78">78%<br>궁극기</div>
+    </div>
+
+    <div id="growthScreen" class="panelScreen growth">
+      <div class="cardPanel">
+        <h2>빛나는 별 아스트리아</h2>
+        <div class="characterView">
+          <div class="heroPaper"></div>
+          <div class="equipGrid">
+            <div class="equip">무기<br><small>성광검 +15</small></div>
+            <div class="equip">투구<br><small>별의 관 +15</small></div>
+            <div class="equip">갑옷<br><small>성기사단 +15</small></div>
+            <div class="equip">목걸이<br><small>수호자 +12</small></div>
+            <div class="equip">반지<br><small>달빛 +10</small></div>
+          </div>
         </div>
       </div>
-    </section>
-  </main>
+      <div class="cardPanel">
+        <h2>전투 능력</h2>
+        <div class="statList">
+          <div class="statLine">전투력<br><b>1,234,567</b></div>
+          <div class="statLine">공격력<br><b>98,765</b></div>
+          <div class="statLine">방어력<br><b>64,321</b></div>
+          <div class="statLine">생명력<br><b>287,654</b></div>
+          <div class="statLine">치명타<br><b>45.6%</b></div>
+          <div class="statLine">속도<br><b>132</b></div>
+        </div>
+        <div class="upgradeButtons">
+          <button onclick="upgrade('skill')">스킬 강화</button>
+          <button onclick="upgrade('awake')">각성</button>
+          <button onclick="upgrade('gear')">장비 강화</button>
+        </div>
+      </div>
+    </div>
 
-  <script>
-    const ui = {
-      tabCanvas: document.getElementById("tabCanvas"),
-      tabWebgl: document.getElementById("tabWebgl"),
-      c2d: document.getElementById("canvas2d"),
-      glCanvas: document.getElementById("webgl"),
-      title: document.getElementById("title"),
-      subtitle: document.getElementById("subtitle"),
-      mode: document.getElementById("mode"),
-      difficulty: document.getElementById("difficulty"),
-      target: document.getElementById("target"),
-      log: document.getElementById("log"),
-      skillBtn: document.getElementById("skillBtn"),
-      ultBtn: document.getElementById("ultBtn"),
-      notice: document.getElementById("notice")
-    };
+    <div id="summonScreen" class="panelScreen summon">
+      <div class="bannerList">
+        <div class="pick"><b>픽업 소환</b><br>아스트리아 확률 UP!</div>
+        <div class="pick"><b>프리미엄 소환</b><br>다양한 영웅 등장</div>
+        <div class="pick"><b>우정 소환</b><br>우정 포인트로 소환</div>
+      </div>
+      <div class="ssrCard"><div><h2>SSR</h2><b>아스트리아</b><br>★★★★★</div></div>
+      <div class="summonRight">
+        <div class="heroSmall">아스트리아</div><div class="heroSmall">카이렌</div><div class="heroSmall">세리아</div>
+        <div class="heroSmall">루나</div><div class="heroSmall">노엘</div><div class="heroSmall">이리스</div>
+        <div class="heroSmall">베르가스</div><div class="heroSmall">엘레나</div><div class="heroSmall">라온</div>
+      </div>
+      <div class="summonButtons"><button onclick="summon(1)">1회 소환</button><button onclick="summon(10)">10회 소환</button></div>
+    </div>
 
-    let active = "canvas";
-    let lastModeSwitch = 0;
+    <div class="bottomNav">
+      <button class="navBtn active" id="navHome" onclick="showHome()"><span>⌂</span>홈</button>
+      <button class="navBtn" id="navBattle" onclick="goBattle()"><span>⚔</span>전투</button>
+      <button class="navBtn" id="navGrowth" onclick="showGrowth()"><span>✹</span>성장</button>
+      <button class="navBtn" onclick="toast('장비 화면은 다음 버전에서 열립니다')"><span>🛡</span>장비</button>
+      <button class="navBtn" id="navSummon" onclick="showSummon()"><span>◆</span>소환</button>
+      <button class="navBtn" onclick="toast('상점 화면은 다음 버전에서 열립니다')"><span>🛒</span>상점</button>
+    </div>
 
-    function setLog(label, text) {
-      ui.log.innerHTML = "<strong>" + label + "</strong> " + text;
-    }
+    <div id="toast" class="toast"></div>
+  </div>
+</div>
 
-    function switchMode(mode) {
-      active = mode;
-      lastModeSwitch = performance.now();
-      const isCanvas = mode === "canvas";
-      ui.c2d.classList.toggle("hidden", !isCanvas);
-      ui.glCanvas.classList.toggle("hidden", isCanvas);
-      ui.tabCanvas.classList.toggle("active", isCanvas);
-      ui.tabWebgl.classList.toggle("active", !isCanvas);
-      ui.title.textContent = isCanvas ? "Canvas 2D" : "WebGL";
-      ui.subtitle.textContent = isCanvas ? "그림판처럼 2D를 직접 그리는 방식" : "GPU로 빠르게 렌더링하는 방식";
-      ui.mode.textContent = isCanvas ? "2D" : "GPU";
-      ui.difficulty.textContent = isCanvas ? "쉬움" : "어려움";
-      ui.target.textContent = isCanvas ? "입문" : "고퀄";
-      setLog(isCanvas ? "Canvas 2D" : "WebGL", isCanvas
-        ? "코드가 쉽고 체력바, UI, 간단한 전투에 좋습니다."
-        : "파티클과 빛 효과를 많이 쓰는 전투에 강하지만 구조가 복잡합니다.");
-    }
+<script src="https://pixijs.download/v7.4.2/pixi.min.js"></script>
+<script>
+let pixi, root, bgLayer, actorLayer, fxLayer, hero, boss, heroBase={x:0,y:0}, bossBase={x:0,y:0};
+let mode='home', combo=0, ult=78, bossHp=68.6, t=0, auto=0, effects=[];
+const $=id=>document.getElementById(id);
 
-    ui.tabCanvas.onclick = () => switchMode("canvas");
-    ui.tabWebgl.onclick = () => switchMode("webgl");
+function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1200)}
+function setNav(id){document.querySelectorAll('.navBtn').forEach(b=>b.classList.remove('active'));$(id).classList.add('active')}
+function hideScreens(){['homeLayer','battleHud','growthScreen','summonScreen'].forEach(id=>$(id).classList.remove('show'))}
+function showHome(){mode='home';hideScreens();$('homeLayer').classList.add('show');setNav('navHome')}
+function goBattle(){mode='battle';hideScreens();$('battleHud').classList.add('show');setNav('navBattle');toast('보스 레이드 진입')}
+function showGrowth(){mode='growth';hideScreens();$('growthScreen').classList.add('show');setNav('navGrowth')}
+function showSummon(){mode='summon';hideScreens();$('summonScreen').classList.add('show');setNav('navSummon')}
+function upgrade(type){toast(type==='skill'?'스킬 강화 완료':'강화 완료'); burst(heroBase.x,heroBase.y-160,60,0xffd36a,1.2)}
+function summon(n){toast(n+'회 소환 실행'); burst(pixi.screen.width*.5,pixi.screen.height*.42,160,0x9fc7ff,1.7)}
 
-    // ---------------- Canvas 2D 데모 ----------------
-    const ctx = ui.c2d.getContext("2d");
-    const cState = {
-      time:0, heroX:330, heroY:440, enemyX:900, enemyY:430,
-      enemyHp:100, enemyMaxHp:100, gold:0, level:1,
-      flash:0, dash:0, skillCooldown:0, ult:0, particles:[], texts:[]
-    };
-
-    function cParticles(x,y,count,color){
-      for(let i=0;i<count;i++){
-        cState.particles.push({x,y,vx:(Math.random()-.5)*9,vy:(Math.random()-.9)*8,life:42+Math.random()*22,max:64,size:4+Math.random()*8,color});
-      }
-    }
-    function cDamageText(x,y,value){cState.texts.push({x,y,value,life:55});}
-    function cDealDamage(amount,type){
-      cState.enemyHp-=amount;cState.flash=12;cState.dash=10;cState.ult=Math.min(100,cState.ult+amount*.45);
-      cParticles(cState.enemyX-50,cState.enemyY-75,type==="궁극기"?70:22,type==="궁극기"?"#ffe58a":"#ff8b3d");
-      cDamageText(cState.enemyX-40,cState.enemyY-120,amount);
-      setLog("Canvas 2D", type+" 피해 "+amount+" — 데미지 숫자와 이펙트를 직접 그립니다.");
-      if(cState.enemyHp<=0){
-        cState.gold+=15;cState.level+=cState.gold%60===0?1:0;cState.enemyMaxHp+=18;cState.enemyHp=cState.enemyMaxHp;
-        cParticles(cState.enemyX,cState.enemyY-90,45,"#8dffb8");
-        setLog("Canvas 2D","몬스터 처치! 골드 +15 / 다음 몬스터 등장");
-      }
-    }
-    function rr(x,y,w,h,r,fill,stroke){
-      ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();
-      if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}
-    }
-    function cBackground(){
-      const g=ctx.createLinearGradient(0,0,0,720);g.addColorStop(0,"#10183a");g.addColorStop(.55,"#11152a");g.addColorStop(1,"#090b14");
-      ctx.fillStyle=g;ctx.fillRect(0,0,1280,720);
-      ctx.fillStyle="rgba(55,70,115,.55)";
-      for(let i=0;i<8;i++){const x=i*180-60;ctx.beginPath();ctx.moveTo(x,430);ctx.lineTo(x+130,240+Math.sin(i)*40);ctx.lineTo(x+260,430);ctx.fill();}
-      ctx.fillStyle="#15121f";ctx.fillRect(0,520,1280,220);
-      ctx.strokeStyle="rgba(255,221,145,.24)";ctx.lineWidth=2;
-      for(let i=0;i<14;i++){ctx.beginPath();ctx.moveTo(i*110,520);ctx.lineTo(i*110+80,720);ctx.stroke();}
-    }
-    function cHero(){
-      const x=cState.heroX+cState.dash*3,y=cState.heroY;
-      ctx.save();ctx.translate(x,y);ctx.rotate(Math.sin(cState.time/20)*.02);
-      ctx.fillStyle="rgba(42,48,100,.85)";ctx.beginPath();ctx.moveTo(-70,-120);ctx.quadraticCurveTo(-145,-10,-80,95);ctx.lineTo(50,86);ctx.quadraticCurveTo(10,-20,50,-122);ctx.closePath();ctx.fill();
-      rr(-42,-125,84,165,20,"#f3f0e8","rgba(244,200,119,.8)");
-      ctx.beginPath();ctx.arc(0,-170,39,0,Math.PI*2);ctx.fillStyle="#ffe7d4";ctx.fill();ctx.strokeStyle="rgba(244,200,119,.9)";ctx.stroke();
-      ctx.fillStyle="#f7e8c8";ctx.beginPath();ctx.arc(0,-184,50,Math.PI*.95,Math.PI*2.05);ctx.fill();
-      for(let i=0;i<12;i++){ctx.beginPath();ctx.ellipse(-50+i*9,-110+Math.sin(cState.time/20+i)*5,6,90,0,0,Math.PI*2);ctx.fill();}
-      ctx.fillStyle="#f4c877";ctx.beginPath();ctx.moveTo(-35,-218);ctx.lineTo(-15,-196);ctx.lineTo(0,-230);ctx.lineTo(15,-196);ctx.lineTo(35,-218);ctx.lineTo(25,-190);ctx.lineTo(-25,-190);ctx.closePath();ctx.fill();
-      rr(-33,35,24,105,9,"#efeef5","rgba(244,200,119,.7)");rr(12,35,24,105,9,"#efeef5","rgba(244,200,119,.7)");
-      ctx.save();ctx.translate(70,-35);ctx.rotate(-.75);ctx.fillStyle="#dfeeff";ctx.fillRect(0,-8,240,16);ctx.fillStyle="#f0bf60";ctx.fillRect(-18,-22,38,44);ctx.fillStyle="#29315f";ctx.fillRect(-58,-8,46,16);ctx.restore();
-      ctx.restore();
-    }
-    function cEnemy(){
-      const shake=cState.flash>0?(Math.random()-.5)*16:0,x=cState.enemyX+shake,y=cState.enemyY;
-      ctx.save();ctx.translate(x,y);ctx.scale(1+Math.sin(cState.time/25)*.025,1);
-      ctx.fillStyle=cState.flash>0?"#ffe2d8":"#6ee56f";ctx.beginPath();ctx.ellipse(0,-55,92,70,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#103818";ctx.lineWidth=6;ctx.stroke();
-      ctx.fillStyle="#0b2010";ctx.beginPath();ctx.arc(-32,-70,8,0,Math.PI*2);ctx.arc(34,-70,8,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle="#0b2010";ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,-45,28,.15,Math.PI-.15);ctx.stroke();ctx.restore();
-      const hp=cState.enemyHp/cState.enemyMaxHp;rr(cState.enemyX-120,cState.enemyY-180,240,18,9,"rgba(0,0,0,.55)","rgba(255,255,255,.18)");rr(cState.enemyX-120,cState.enemyY-180,240*hp,18,9,"#ff4d4d",null);
-    }
-    function cDrawParticles(){
-      for(const p of cState.particles){const a=Math.max(0,p.life/p.max);ctx.globalAlpha=a;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size*a,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;
-    }
-    function cTexts(){
-      ctx.font="900 44px system-ui";ctx.textAlign="center";
-      for(const d of cState.texts){ctx.globalAlpha=Math.max(0,d.life/55);ctx.fillStyle="#ffefb0";ctx.strokeStyle="#441909";ctx.lineWidth=6;ctx.strokeText(String(d.value),d.x,d.y);ctx.fillText(String(d.value),d.x,d.y);}
-      ctx.globalAlpha=1;ctx.textAlign="start";
-    }
-    function cBars(){
-      rr(418,90,430,22,11,"rgba(0,0,0,.5)","rgba(255,255,255,.12)");rr(418,90,430*(cState.ult/100),22,11,"#9cf5ff",null);
-      ctx.fillStyle="#fff1c8";ctx.font="bold 20px system-ui";ctx.fillText("궁극기 "+Math.floor(cState.ult)+"%",560,83);
-      ctx.fillText("Lv."+cState.level+"  Gold "+cState.gold,38,105);
-      ctx.fillText("Enemy HP "+Math.max(0,Math.floor(cState.enemyHp))+"/"+cState.enemyMaxHp,820,270);
-    }
-    function cUpdate(){
-      cState.time++;if(cState.time%80===0)cDealDamage(12+cState.level*2,"자동 공격");
-      if(cState.flash>0)cState.flash--;if(cState.dash>0)cState.dash--;if(cState.skillCooldown>0)cState.skillCooldown--;
-      for(const p of cState.particles){p.x+=p.vx;p.y+=p.vy;p.vy+=.16;p.life--;}cState.particles=cState.particles.filter(p=>p.life>0);
-      for(const d of cState.texts){d.y-=1.5;d.life--;}cState.texts=cState.texts.filter(d=>d.life>0);
-    }
-    function cRender(){cBackground();cHero();cEnemy();cDrawParticles();cTexts();cBars();}
-
-    // ---------------- WebGL 데모 ----------------
-    const gl = ui.glCanvas.getContext("webgl",{alpha:false,antialias:true});
-    let glReady = !!gl;
-    const gState = {time:0,heroX:320,heroY:420,enemyX:900,enemyY:420,enemyHp:120,enemyMaxHp:120,gold:0,level:1,flash:0,dash:0,skillCooldown:0,ult:0,particles:[]};
-    let program, loc, buffer;
-
-    if(glReady){
-      const vs=`attribute vec2 a_position;uniform vec2 u_resolution;uniform vec2 u_translate;uniform vec2 u_scale;uniform float u_rotation;void main(){float c=cos(u_rotation);float s=sin(u_rotation);vec2 scaled=a_position*u_scale;vec2 rotated=vec2(scaled.x*c-scaled.y*s,scaled.x*s+scaled.y*c);vec2 pixel=rotated+u_translate;vec2 zeroToOne=pixel/u_resolution;vec2 clip=zeroToOne*2.0-1.0;gl_Position=vec4(clip*vec2(1.0,-1.0),0.0,1.0);}`;
-      const fs=`precision mediump float;uniform vec4 u_color;void main(){gl_FragColor=u_color;}`;
-      function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.error(gl.getShaderInfoLog(s));glReady=false;}return s;}
-      program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,vs));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(program);
-      loc={pos:gl.getAttribLocation(program,"a_position"),res:gl.getUniformLocation(program,"u_resolution"),tr:gl.getUniformLocation(program,"u_translate"),sc:gl.getUniformLocation(program,"u_scale"),rot:gl.getUniformLocation(program,"u_rotation"),color:gl.getUniformLocation(program,"u_color")};
-      buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-.5,-.5,.5,-.5,-.5,.5,-.5,.5,.5,-.5,.5,.5]),gl.STATIC_DRAW);
-    }
-    function rect(x,y,w,h,c,r=0){if(!glReady)return;gl.useProgram(program);gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.enableVertexAttribArray(loc.pos);gl.vertexAttribPointer(loc.pos,2,gl.FLOAT,false,0,0);gl.uniform2f(loc.res,1280,720);gl.uniform2f(loc.tr,x,y);gl.uniform2f(loc.sc,w,h);gl.uniform1f(loc.rot,r);gl.uniform4f(loc.color,c[0],c[1],c[2],c[3]);gl.drawArrays(gl.TRIANGLES,0,6);}
-    function dia(x,y,s,c,r=0){rect(x,y,s,s,c,r+Math.PI/4);}
-    function gParticles(x,y,count,color,power=1){for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2,sp=(2+Math.random()*7)*power;gState.particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:45+Math.random()*35,max:80,size:8+Math.random()*22,color});}}
-    function gDealDamage(amount,type){
-      gState.enemyHp-=amount;gState.flash=12;gState.dash=9;gState.ult=Math.min(100,gState.ult+amount*.35);
-      const color=type==="궁극기"?[1,.84,.25,1]:[.35,.82,1,1];
-      gParticles(gState.enemyX-60,gState.enemyY-60,type==="궁극기"?140:40,color,type==="궁극기"?1.6:1);
-      setLog("WebGL",type+" 피해 "+amount+" — 파티클을 많이 뿌려도 확장성이 좋습니다.");
-      if(gState.enemyHp<=0){gState.gold+=20;gState.level+=gState.gold%80===0?1:0;gState.enemyMaxHp+=24;gState.enemyHp=gState.enemyMaxHp;gParticles(gState.enemyX,gState.enemyY-60,100,[.45,1,.65,1],1.3);}
-    }
-    function gBackground(){
-      rect(640,360,1280,720,[.035,.045,.095,1]);rect(640,220,1280,330,[.08,.11,.25,1]);rect(640,580,1280,280,[.075,.055,.10,1]);
-      for(let i=0;i<18;i++)rect(i*90,560,2,310,[.25,.17,.45,.25],-.26);
-      for(let i=0;i<18;i++){const x=(i*173+gState.time*.25)%1350-40,y=120+Math.sin(gState.time/35+i)*55,s=18+(i%4)*6;dia(x,y,s,[.22,.58,1,.18],gState.time/90+i);}
-    }
-    function gHero(){
-      const x=gState.heroX+gState.dash*5,y=gState.heroY+Math.sin(gState.time/22)*2;
-      rect(x-35,y-5,140,230,[.15,.14,.36,.95],-.18);rect(x,y-55,86,160,[.92,.88,.76,1],.02);rect(x,y-74,100,36,[.93,.70,.33,1],.02);
-      dia(x,y-175,76,[1,.82,.72,1]);for(let i=0;i<9;i++)rect(x-55+i*14,y-114+Math.sin(gState.time/18+i)*4,10,145,[.95,.84,.64,.92],.03);
-      dia(x,y-230,34,[1,.78,.28,1],gState.time/120);rect(x+120,y-75,280,16,[.72,.95,1,.9],-.55);rect(x+125,y-75,310,4,[1,1,1,1],-.55);
-    }
-    function gEnemy(){
-      const shake=gState.flash>0?(Math.random()-.5)*18:0,x=gState.enemyX+shake,y=gState.enemyY,fl=gState.flash>0;
-      rect(x,y-65,150,120,fl?[1,.76,.72,1]:[.28,.10,.42,1],Math.sin(gState.time/18)*.03);dia(x-38,y-115,36,[.55,.22,.95,1],gState.time/60);dia(x+42,y-113,36,[.55,.22,.95,1],gState.time/-60);rect(x,y-26,100,20,[.04,.02,.07,1]);
-      const ratio=gState.enemyHp/gState.enemyMaxHp;rect(x,y-190,250,18,[0,0,0,.65]);rect(x-125+(250*ratio)/2,y-190,250*ratio,18,[1,.18,.22,1]);
-    }
-    function gBars(){const ratio=gState.ult/100;rect(640,94,450,22,[0,0,0,.55]);rect(415+450*ratio/2,94,450*ratio,22,[.4,.9,1,1]);}
-    function gDrawParticles(){gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);for(const p of gState.particles){const a=Math.max(0,p.life/p.max);dia(p.x,p.y,p.size*a,[p.color[0],p.color[1],p.color[2],a],gState.time/20);}gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);}
-    function gUpdate(){gState.time++;if(gState.time%70===0)gDealDamage(15+gState.level*2,"자동 공격");if(gState.flash>0)gState.flash--;if(gState.dash>0)gState.dash--;if(gState.skillCooldown>0)gState.skillCooldown--;for(const p of gState.particles){p.x+=p.vx;p.y+=p.vy;p.vx*=.985;p.vy*=.985;p.life--;}gState.particles=gState.particles.filter(p=>p.life>0);}
-    function gRender(){if(!glReady)return;gl.viewport(0,0,1280,720);gl.clearColor(.02,.025,.06,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gBackground();gHero();gEnemy();gBars();gDrawParticles();}
-
-    ui.skillBtn.onclick=()=>{
-      if(active==="canvas"){
-        if(cState.skillCooldown>0){setLog("Canvas 2D","스킬 쿨타임 "+Math.ceil(cState.skillCooldown/60)+"초");return;}
-        cState.skillCooldown=180;cDealDamage(38+cState.level*3,"스킬");
-      }else{
-        if(gState.skillCooldown>0){setLog("WebGL","스킬 쿨타임 "+Math.ceil(gState.skillCooldown/60)+"초");return;}
-        gState.skillCooldown=150;gDealDamage(48+gState.level*4,"스킬");
-      }
-    };
-    ui.ultBtn.onclick=()=>{
-      if(active==="canvas"){
-        if(cState.ult<100){setLog("Canvas 2D","궁극기 게이지 "+Math.floor(cState.ult)+"%");return;}
-        cState.ult=0;cDealDamage(110+cState.level*8,"궁극기");
-      }else{
-        if(gState.ult<100){setLog("WebGL","궁극기 게이지 "+Math.floor(gState.ult)+"%");return;}
-        gState.ult=0;gParticles(640,340,220,[1,.55,.95,1],1.8);gDealDamage(150+gState.level*10,"궁극기");
-      }
-    };
-
-    function loop(){
-      cUpdate();gUpdate();
-      if(active==="canvas")cRender();else gRender();
-      requestAnimationFrame(loop);
-    }
-    loop();
-  </script>
+function makeHero(){
+  const c=new PIXI.Container();
+  const cape=new PIXI.Graphics(); cape.beginFill(0x293060,.9); cape.drawPolygon([-95,-125,-190,120,-50,170,90,95,55,-140]); cape.endFill(); c.addChild(cape);
+  const body=new PIXI.Graphics(); body.beginFill(0xf5efe5); body.lineStyle(4,0xd9ac5d,.85); body.drawRoundedRect(-54,-145,108,190,24); body.endFill(); body.beginFill(0x111a35); body.drawRoundedRect(-44,-118,88,28,10); body.endFill(); c.addChild(body);
+  const armor=new PIXI.Graphics(); armor.lineStyle(5,0xe3b75f,.9); armor.moveTo(-40,-80); armor.lineTo(0,20); armor.lineTo(40,-80); armor.moveTo(-52,-25); armor.lineTo(52,-25); armor.beginFill(0x2f5fd3); armor.drawCircle(0,-82,10); armor.endFill(); c.addChild(armor);
+  const head=new PIXI.Graphics(); head.beginFill(0xffdfd0); head.lineStyle(3,0xf2c77b,.8); head.drawCircle(0,-195,43); head.endFill(); c.addChild(head);
+  const hair=new PIXI.Graphics(); hair.beginFill(0xf4e5c9); hair.drawCircle(0,-214,55); for(let i=0;i<18;i++){hair.drawRoundedRect(-86+i*10,-170,8,235+(i%5)*22,6)} hair.endFill(); c.addChild(hair); c.setChildIndex(hair,2);
+  const face=new PIXI.Graphics(); face.beginFill(0x6c82dc); face.drawEllipse(-16,-201,5,8); face.drawEllipse(16,-201,5,8); face.endFill(); c.addChild(face);
+  const crown=new PIXI.Graphics(); crown.beginFill(0xf3c56a); crown.drawPolygon([-43,-250,-18,-220,0,-262,18,-220,43,-250,30,-212,-30,-212]); crown.endFill(); c.addChild(crown);
+  const legs=new PIXI.Graphics(); legs.beginFill(0xf0eef4); legs.lineStyle(3,0xd9ac5d,.8); legs.drawRoundedRect(-39,45,28,130,10); legs.drawRoundedRect(13,45,28,130,10); legs.endFill(); c.addChild(legs);
+  const sword=new PIXI.Graphics(); sword.lineStyle(4,0xffffff,.75); sword.beginFill(0xa8dcff); sword.drawRoundedRect(58,-56,300,16,8); sword.endFill(); sword.beginFill(0xd8a54e); sword.drawRoundedRect(25,-78,70,55,10); sword.endFill(); sword.beginFill(0x122052); sword.drawRoundedRect(-35,-56,72,14,7); sword.endFill(); sword.rotation=-.48; c.addChild(sword);
+  return c;
+}
+function makeBoss(){
+  const c=new PIXI.Container();
+  const wing=new PIXI.Graphics(); wing.beginFill(0x171225,.92); wing.lineStyle(4,0x7b58d8,.5); wing.drawPolygon([-60,-70,-250,-190,-210,40,-90,90]); wing.drawPolygon([60,-70,250,-190,210,40,90,90]); wing.endFill(); c.addChild(wing);
+  const body=new PIXI.Graphics(); body.beginFill(0x20172d); body.lineStyle(6,0x9d78ff,.8); body.drawRoundedRect(-95,-180,190,260,35); body.endFill(); body.beginFill(0x111018); body.drawPolygon([-88,-150,-45,-240,-5,-150]); body.drawPolygon([88,-150,45,-240,5,-150]); body.endFill(); body.beginFill(0xff4b4b); body.drawCircle(-32,-95,9); body.drawCircle(32,-95,9); body.endFill(); c.addChild(body);
+  const core=new PIXI.Graphics(); core.beginFill(0xa665ff,.9); core.drawCircle(0,-25,27); core.endFill(); c.addChild(core);
+  return c;
+}
+function drawBg(){
+  bgLayer.removeChildren(); const w=pixi.screen.width,h=pixi.screen.height;
+  const g=new PIXI.Graphics(); g.beginFill(0x0b1022); g.drawRect(0,0,w,h); g.endFill(); g.beginFill(0x16234a,.75); g.drawRect(0,0,w,h*.72); g.endFill();
+  for(let i=0;i<11;i++){const x=i*w/10; g.beginFill(i%2?0x24345f:0x1a2852,.52); g.drawPolygon([x-w*.15,h*.70,x,h*(.22+(i%3)*.05),x+w*.17,h*.70]); g.endFill()}
+  for(let i=0;i<42;i++){g.beginFill(0xffe5a0,.12+Math.random()*.22); g.drawCircle(Math.random()*w,Math.random()*h*.58,1+Math.random()*2); g.endFill()}
+  g.beginFill(0x0a0a10,.45); g.drawRect(0,h*.70,w,h*.30); g.endFill();
+  bgLayer.addChild(g);
+}
+function burst(x,y,count,color,power=1){
+  for(let i=0;i<count;i++){const p=new PIXI.Graphics(); const s=2+Math.random()*8; p.beginFill(color,.88); p.drawCircle(0,0,s); p.endFill(); p.x=x;p.y=y; const a=Math.random()*Math.PI*2,sp=(1.3+Math.random()*7)*power; p.vx=Math.cos(a)*sp;p.vy=Math.sin(a)*sp;p.life=35+Math.random()*35;p.maxLife=p.life;p.blendMode=PIXI.BLEND_MODES.ADD; fxLayer.addChild(p); effects.push(p)}
+}
+function slash(){
+  const g=new PIXI.Graphics(); g.lineStyle(16,0xfff0a0,.9); g.moveTo(-170,50); g.quadraticCurveTo(0,-110,210,-20); g.lineStyle(5,0xaee2ff,1); g.moveTo(-150,60); g.quadraticCurveTo(10,-90,185,-10); g.x=(heroBase.x+bossBase.x)/2; g.y=bossBase.y-70; g.life=30; g.blendMode=PIXI.BLEND_MODES.ADD; fxLayer.addChild(g); effects.push(g)
+}
+function damageText(value){
+  const tx=new PIXI.Text(value,{fontFamily:'Georgia',fontSize:48,fontWeight:'900',fill:0xffdf85,stroke:0x241019,strokeThickness:5,dropShadow:true,dropShadowBlur:8}); tx.anchor.set(.5); tx.x=bossBase.x; tx.y=bossBase.y-145; tx.life=55; fxLayer.addChild(tx); effects.push(tx)
+}
+function useSkill(n){if(mode!=='battle'){goBattle()} combo+=n*2; ult=Math.min(100,ult+n*6); bossHp=Math.max(0,bossHp-(n*2.8)); slash(); burst(bossBase.x-80,bossBase.y-80,50+n*25,n===4?0xffd36a:0x9fc7ff,1.2+n*.15); damageText(n===4?'CRITICAL 567,890':'123,456'); updateHud(); if(bossHp<=0){bossHp=100; toast('보스 처치! 보상 획득'); burst(bossBase.x,bossBase.y-80,220,0xffd36a,1.9)}}
+function useUltimate(){if(ult<100){toast('궁극기 게이지 부족');return} ult=0; combo+=18; bossHp=Math.max(0,bossHp-28); burst(pixi.screen.width*.5,pixi.screen.height*.45,260,0xffdf7a,2); slash(); damageText('1,234,567'); updateHud()}
+function updateHud(){ $('combo').textContent=combo+' COMBO'; $('ultRing').style.setProperty('--ult',ult); $('ultRing').innerHTML=Math.floor(ult)+'%<br>궁극기'; $('bossHp').style.width=bossHp+'%' }
+function layout(){
+  const w=pixi.screen.width,h=pixi.screen.height; heroBase={x:w*.36,y:h*.66}; bossBase={x:w*.74,y:h*.63};
+  hero.x=heroBase.x; hero.y=heroBase.y; boss.x=bossBase.x; boss.y=bossBase.y;
+  const s=Math.max(.48,Math.min(1.05,w/1280)); hero.scale.set(s); boss.scale.set(s*1.12); drawBg()
+}
+function tick(delta){
+  t+=delta; auto+=delta;
+  if(hero){hero.x=heroBase.x+Math.sin(t/40)*3;hero.y=heroBase.y+Math.sin(t/35)*3;hero.rotation=Math.sin(t/85)*.01}
+  if(boss){boss.x=bossBase.x+Math.sin(t/25)*5;boss.y=bossBase.y+Math.sin(t/32)*4;boss.rotation=Math.sin(t/55)*.015}
+  if(mode==='battle'&&auto>78){auto=0;useSkill(1)}
+  for(const e of effects){e.life-=delta;e.alpha=Math.max(0,e.life/(e.maxLife||55)); if(e.vx!==undefined){e.x+=e.vx*delta;e.y+=e.vy*delta;e.vx*=.985;e.vy*=.985}else{e.scale.x+=.015*delta;e.scale.y+=.015*delta}}
+  effects=effects.filter(e=>{if(e.life>0)return true;if(e.parent)e.parent.removeChild(e);return false})
+}
+function init(){
+  if(!window.PIXI){$('loading').innerHTML='PixiJS 로딩 실패<br>인터넷 연결을 확인해줘';return}
+  pixi=new PIXI.Application({resizeTo:$('stage'),backgroundAlpha:0,antialias:true,resolution:Math.min(window.devicePixelRatio||1,2),autoDensity:true});
+  $('stage').appendChild(pixi.view); root=new PIXI.Container(); bgLayer=new PIXI.Container(); actorLayer=new PIXI.Container(); fxLayer=new PIXI.Container(); pixi.stage.addChild(bgLayer,actorLayer,fxLayer);
+  hero=makeHero(); boss=makeBoss(); actorLayer.addChild(hero,boss); layout(); window.addEventListener('resize',layout); pixi.ticker.add(tick); $('loading').classList.add('hide'); updateHud()
+}
+init()
+</script>
 </body>
 </html>
